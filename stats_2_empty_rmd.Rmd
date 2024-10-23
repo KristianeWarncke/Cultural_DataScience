@@ -1,0 +1,187 @@
+---
+title: An R Markdown document converted from "stats_2_empty_ipynb.ipynb"
+output: html_document
+---
+
+# Exercise 1 - introducing t-test 
+
+You have already learned about the the command line, scripts, and functions. R has one more level of organisation. Packages. Packages are sets of functions. We have already used one of these. Packages can also include data. We are now going to install a package, load it, and use it just for it's data. 
+
+The package level is what makes R so powerful as a an open source language. you can make a package, get it reviewed, and have it stored on CRAN (Comprehensive R Archive Network) where everyone can download it. This means that R is an active environment for the development of statistical methods and theory.
+
+Description of the package here: https://simplystatistics.org/2018/01/22/the-dslabs-package-provides-datasets-for-teaching-data-science/
+
+```{r}
+install.packages("dplyr")
+install.packages("ggplot2")
+install.packages("dslabs")
+```
+
+```{r}
+library(dplyr)
+library(dslabs)
+library(ggplot2)
+```
+
+Let's conduct an analysis of the height data - self-reported heights in inches
+```{r}
+data("heights")
+```
+
+This gives us a data frame.
+```{r}
+head(heights)
+```
+
+```{r}
+str(heights)
+```
+
+First let's make frequency distributions for the women and men seperately.
+
+You can make some quick and dirty separate plots using a basic function and indexing...
+```{r}
+hist(heights$height[heights$sex == "Male"])
+hist(heights$height[heights$sex == "Female"])
+```
+
+... though it would be better if we could see all the data together on the same histogram
+```{r}
+ggplot(heights, 
+       aes(x=height,
+           fill = sex)) +
+  geom_histogram(position = "identity",
+                 alpha=0.5)
+#approximately two bell curve
+#always pay attention to the volume of your data (proportions: males had more data than females)
+```
+
+```{r}
+stats_table <- heights %>%
+  group_by(sex) %>%
+  summarise(mean_height = mean(height), 
+            median_height = median(height), 
+            sd_height = sd(height))
+```
+
+Let's look at the summary statistics - you can actually make them in 1 table!
+```{r}
+stats_table
+```
+
+```{r}
+shapiro.test(heights$height[heights$sex == "Male"])
+```
+
+```{r}
+shapiro.test(heights$height[heights$sex == "Female"])
+```
+
+Lets try visualising the data in terms of probability distributions
+```{r}
+ggplot(heights, 
+       aes(x = height,
+           fill = sex)) +
+  geom_density(alpha = 0.5)
+```
+
+Now we are ready to run a hypothesis test. Are men taller than women? What sort of t test should we do?
+```{r}
+t.test(height ~ sex, data = heights)
+```
+
+# Exercise 2 - Some more messy real world data
+
+We have been dealing with data that is fairly well organised. Let's look at some data that is slightly more messy
+
+Install and load the fuelconomy package, which has fuel economy data from the EPA: https://cran.r-project.org/web/packages/fueleconomy/fueleconomy.pdf
+```{r}
+install.packages("fueleconomy")
+```
+
+```{r}
+library(fueleconomy)
+```
+
+```{r}
+data("vehicles")
+```
+
+```{r}
+head(vehicles)
+```
+
+Let's set ourselves the task of comparing the city fuel economy of the midsize class of two car brands: Audi and VW
+
+Our first step is to isolate the relevant data. There are many ways to do this. Here's one:
+
+```{r}
+Audi_Midsize <- vehicles %>% 
+  filter(make == "Audi" & class == "Midsize Cars")
+
+VW_Midsize <- vehicles %>% 
+  filter(make == "Volkswagen" & class == "Midsize Cars")
+```
+
+```{r}
+head(VW_Midsize)
+```
+
+How many cars do we have in each group?
+```{r}
+str(Audi_Midsize) #157
+str(VW_Midsize) #97
+```
+
+Let's use t.test to compare performance of the two cars
+```{r}
+t.test(Audi_Midsize$cty, VW_Midsize$cty)
+```
+
+Let's visualise the data and see if this is the best way to ask our question
+```{r}
+Audi_VW <- rbind(Audi_Midsize, VW_Midsize)
+```
+
+```{r}
+ggplot(Audi_VW,
+       aes(x = cty,
+           fill = make)) +
+  geom_histogram(position = "identity",
+                 alpha = 0.5,
+                 bins = 20)
+```
+
+```{r}
+shapiro.test(Audi_Midsize$cty)
+shapiro.test(VW_Midsize$cty)
+```
+
+```{r}
+ggplot(Audi_VW,
+       aes(x = cty,
+           fill = make)) +
+  geom_density(alpha = 0.5)
+```
+
+We see that a normal distribution is an okay model for our data, but perhaps not the best one. We can see something important happening in the tails suggesting there is important structure we will miss.
+
+Let's investigate that structure
+```{r}
+str(Audi_VW)
+```
+
+Let's make a scatterplot
+```{r fig.width = 5, fig.height = 6}
+ggplot(Audi_VW,
+       aes(x=cyl, 
+           y = cty)) +
+  geom_point(position = "jitter") +
+  facet_wrap(~make)
+
+```
+
+```{r}
+
+```
+
