@@ -1,0 +1,169 @@
+---
+title: An R Markdown document converted from "stats_3_empty_ipynb.ipynb"
+output: html_document
+---
+
+```{r}
+install.packages('dslabs')
+```
+
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(dslabs)
+```
+
+
+# Exercise 1 - introducing correlations 
+
+Let's look at the relationship between FERTILITY and LIFE EXPECTANCY. For this we'll use the gapminder dataset
+```{r}
+data(gapminder)
+```
+
+```{r}
+head(gapminder)
+```
+
+```{r}
+str(gapminder)
+```
+
+Let's restrict our question a bit, and start by looking just at the year 2000
+```{r}
+dat2000 <- gapminder %>% 
+  filter(year==2000)
+str(dat2000)
+```
+
+Let's start by just looking at the correlation. The best way to start is to visualise the relationship
+```{r}
+ggplot(dat2000,
+       aes(x = fertility, y = life_expectancy)) +
+  geom_point()
+```
+
+```{r}
+cor.test(dat2000$fertility, dat2000$life_expectancy)
+```
+
+Let's look at another question. What about the relationship between population and life expectancy?
+
+Let's start by just looking at the correlation. The best way to start is to visualise the relationship
+```{r}
+ggplot(dat2000, 
+       aes(x = population, y = life_expectancy)) +
+  geom_point()
+```
+
+This plot is hard to read due to the two very high data points, let's censor them
+```{r}
+ggplot(dat2000, 
+       aes(x = population, y = life_expectancy)) +
+  geom_point() +
+  xlim(0, 2e8)
+```
+
+```{r}
+cor.test(dat2000$life_expectancy, dat2000$population)
+```
+
+Let's apply linear models to both of these relationships
+```{r}
+fertility_model <- lm(life_expectancy ~ fertility, dat2000)
+summary(fertility_model)
+```
+
+```{r}
+population_model <- lm(life_expectancy ~ population, dat2000)
+summary(population_model)
+```
+
+# Exercise 2 - interpreting linear models  
+
+Let's go back to last week. We had a question about the influence of number of cylinders on fuel economy. Let's load the data and return to that question
+
+```{r}
+install.packages("fueleconomy")
+library(fueleconomy)
+```
+
+```{r}
+data("vehicles")
+```
+
+```{r}
+head(vehicles)
+```
+
+Let's isolate the relevant data again for Audi and VW midsizes
+```{r}
+Audi_VW <- vehicles %>%
+  filter(make == "Audi" & class == "Midsize Cars" | make == "Volkswagen" & class == "Midsize Cars")
+str(Audi_VW)
+```
+
+```{r}
+ggplot(Audi_VW, 
+       aes(x = cyl, 
+           y = cty)) +
+  geom_point(position = 'jitter') +
+  facet_wrap( ~ make)
+```
+
+Let's use linear models to investigate the effect of number of cylinders on fuel economy in both makes
+```{r}
+summary(lm(cty ~ cyl, data = subset(Audi_VW, make == "Volkswagen")))
+```
+
+```{r}
+summary(lm(cty ~ cyl, data = subset(Audi_VW, make == "Audi")))
+```
+
+Let's look at this INTERACTION between variables WITHIN THE MODEL
+```{r}
+summary(lm(cty ~ cyl * make, Audi_VW))
+```
+
+Let's go back to this question about which model is better. We can do this using model comparison. Let's build a model without make, and one with, and see what we learn
+```{r}
+m1 <- lm(cty ~ cyl, Audi_VW)
+m2 <- lm(cty ~ cyl + make, Audi_VW)
+m3 <- lm(cty ~ cyl * make, Audi_VW)
+
+anova(m1, m2, m3)
+```
+
+# Exercise 3 - non-linear predictors
+
+Lets look at the relationship infant mortality and life expectancy in the year 2000 what do you notice?
+```{r}
+ggplot(dat2000,
+       aes(x = infant_mortality, 
+           y = life_expectancy)) +
+  geom_point()
+```
+
+```{r}
+dat2000$infant_mortality2 <- dat2000$infant_mortality^2 #making infant mortality an exponential variable 
+```
+
+```{r}
+str(dat2000) #check that it has been added
+```
+
+```{r}
+m4 <- lm(life_expectancy ~ infant_mortality, dat2000)
+m5 <- lm(life_expectancy ~ infant_mortality + infant_mortality2, dat2000)
+
+anova(m4, m5) #see that the model with the exponential variable explains more variance, and is therefore a better fit. 
+```
+
+
+
+
+
+
+
+

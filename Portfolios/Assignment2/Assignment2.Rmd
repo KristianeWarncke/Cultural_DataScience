@@ -1,0 +1,75 @@
+---
+title: Portfolio Assignment 2 - Introduction to Cultural Data Science"
+output: html_document
+authors: Kristiane Uhrenholt Warncke
+date: 30/10-2024
+---
+
+```{r}
+#setup chunk
+library(dslabs)
+library(ggplot2)
+library(dplyr)
+
+```
+
+
+# Part 1. 
+
+Load  the 'divorce_margarine'dataset  from  the 'dslabs'package.  
+```{r}
+
+```
+
+
+Investigate  the  correlation between  margarine  consumption  and  divorce  rates  in  Maine.  Would  an  increase  in  the preference for margarine lead to skyrocketing divorce rates?
+
+# Part 2.
+
+Load the ‘GSSvocab’dataset from the ‘car’package. This dataset contains people’s scores on an English vocabulary test and includes demographic information.
+```{r}
+
+```
+
+Filter for the year 1978and remove rows with missing values (the function na.exclude() is one way to do this – check out the documentation!).
+```{r}
+
+```
+
+Is a person’s  score on the vocabulary test  (‘vocab’) significantly impacted by their level  of education (‘educ’)? Visualize the relationship in a plot and build a model. Briefly explain the results. 
+
+```{r}
+plot
+```
+
+```{r}
+model
+```
+
+Whether a person is the native of an English-speaking country(‘nativeBorn’) could potentially have an impact on the size of their vocabulary. Visualize the relationship and add the predictor to the model.Briefly explain the results.
+```{r}
+
+```
+
+
+
+Does  a  person’s  level  of  education  depend  on  whether they  are  a  native  of  the  country? Visualize the relationship. 
+```{r}
+
+```
+
+
+Do you think it makes sense to add the relationship as an interaction term? Try creating the model and briefly explain the results.
+```{r}
+m1 <- 
+m2 <- 
+m3 <- 
+```
+
+
+Which model performs best? 
+```{r}
+anova(m1, m2, m3)
+```
+
+When creating plots, try to play around with the options of ggplot2–add titlesand axis labels, and consider using colours.
