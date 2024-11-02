@@ -2,7 +2,7 @@
 title: Portfolio Assignment 2 - Introduction to Cultural Data Science"
 output: html_document
 authors: Kristiane Uhrenholt Warncke
-date: 30/10-2024
+date: 02/11-2024
 ---
 
 ```{r}
@@ -33,7 +33,8 @@ head(divorce_margarine)
 ```{r}
 ggplot(divorce_margarine,
        aes(x = margarine_consumption_per_capita, y = divorce_rate_maine)) +
-  geom_point() + 
+  geom_point() +
+  geom_smooth(method = lm, se = FALSE) +
   ggtitle("Margerine Consumption Per Capita as a function of Divorce Rate in Maine") +
   labs(x = "Margerine Consumption Per Capita", y = "Divorce Rate in Maine", caption = "(I didn't know captions were an option! :o)") +
   theme_light()
@@ -77,44 +78,63 @@ dat1978 <- GSSvocab %>%
 
 ```{r}
 ggplot(dat1978, 
-       aes(x = vocab, y = educ)) +
+       aes(x = educ, y = vocab)) +
   geom_point(position = "jitter") +
-  labs(title = "Vocabulary Test Score as a function of Education Level", x = "Vocabulary Test Score", y = "Education Level") +
+  geom_smooth(method = lm, se = FALSE) +
+  labs(title = "Vocabulary Test Score as a function of Education Level", x = "Education Level", y = "Vocabulary Test Score") +
   theme_light()
 ```
 
 ```{r}
 summary(lm(vocab ~ educ, data = dat1978))
 ```
-From the scatter plot it seems that a person’s  score on the vocabulary test increases with level of education. The linear model indicates that for each added level of education, the vocabulary test score increase with 0.39. This positive relation is significant (p < 0.001). The linear model seems to fit the data well, as the R^2 is close to 1 (R^2 = 0.9852), indicating that the model explains a large portion of the variability in the data.
+From the scatter plot it seems that a person’s  score on the vocabulary test increases with level of education. The linear model indicates that for each added level of education, the vocabulary test score increase with 0.39. This positive relation is significant (p < 0.001). However, the linear model does not seem to fit the data very well, (R^2 = 0.2883), indicating that the model explains ~29 % of the variability in the data.
 
 
 **Whether a person is the native of an English-speaking country(‘nativeBorn’) could potentially have an impact on the size of their vocabulary. Visualize the relationship and add the predictor to the model. Briefly explain the results.**
 
 ```{r}
+#Visualizing the data
 ggplot(dat1978, 
-       aes(x = nativeBorn, y = vocab, color = nativeBorn)) +
+       aes(x = educ, y = vocab, group = nativeBorn)) +
   geom_point(position = "jitter") +
+  geom_smooth(method = lm, se = FALSE, aes(color = nativeBorn)) +
   theme_light() +
-  labs(title = "Relation between English-speakers Nativeness and Vocabulary test scores", x = "Native of an English-speaking country", y = "Vocabulary Test Score")
+  labs(title = "Relation between Vocabulary test scores and Education Level by Nativeness", x = "Education Level", y = "Vocabulary Test Score")
 ```
+
+
+
 ```{r}
 summary(lm(vocab ~ educ + nativeBorn, data = dat1978))
 ```
 
-From the plot it becomes visible, that there are far more Native English-speakers than Non-native English-speakers in this data set. 
-The summary of the model predicting Vocabulary from both Education Level and Nativeness indicates that whether a person is the native of an English-speaking country or not does in fact have an impact on the size of their vocabulary, and that this effect is significant (p < 0.01).
+From the plot it seems that being a native born in an English-speaking country on average yields a higher vocabulary across all Education Levels. 
+
+The summary of the linear model predicting Vocabulary from both Education Level and Nativeness indicates that whether a person is the native of an English-speaking country or not does in fact have an impact on the size of their vocabulary, and that this effect is significant (p < 0.01). However, this model still only explains ~29 % of the variance in the data.
 
 **Does  a  person’s  level  of  education  depend  on  whether they  are  a  native  of  the  country? Visualize the relationship.** 
 
 ```{r}
 ggplot(dat1978, 
        aes(x = nativeBorn, y = educ, color = nativeBorn)) +
-  geom_point(position = "jitter") +
+  geom_point(position = position_jitter(width = 0.4), alpha = 0.5) +
+  geom_boxplot(width = 0.3, outlier.shape = NA, color = "black", fill = NA) +
+  facet_grid(~ nativeBorn, scales = "free_x", space = "free_x") +
   theme_light() +
   labs(title = "Relation between Education level and Nativeness", x = "Native of an English-speaking country", y = "Education Level")
 ```
-It is hard to see whether Nativeness of an English-speaking country has an impact on Education Level, as there are so many more data points for Native English-speakers.
+```{r}
+ggplot(dat1978, 
+       aes(x = educ, fill = nativeBorn)) +
+  geom_density(alpha = 0.5) +
+  theme_light() +
+  labs(title = "Density plot of Education level across Nativeness", x = "Education Level", y = "Density")
+```
+
+From the scatter plot with boxplots on top it is seen that there are far more datapoints for Native speakers than non-native speakers. Furthermore, the mean Education Level is similar between the groups, and that there is more variance in the non-native group.
+
+The Density plot similarly reveals that there is a large proportion of the people from Native English-speaking countries that have Education Level 12, and that the non-natives are more spread out across all Education Levels.
 
 
 **Do you think it makes sense to add the relationship as an interaction term? Try creating the model and briefly explain the results.**
@@ -123,8 +143,8 @@ summary(lm(vocab ~ educ * nativeBorn, data = dat1978))
 ```
 
 From the model summary it is seen that:
-- Each additional unit of Education Level is associated with an increase of ~0.42 in the vocabulary score, when a person is a non-Native English-speaker. This effect is statistically significant (p < 0.001).
-- Being a Native English-speaker is associated with an increase of ~0.95 in vocabulary scores, but this effect is not statistically significant (p = 0.186), so we cannot confidently say that being a native English-speaker in itself makes a difference for vocabulary scores when education is considered.
+- Each additional unit of Education Level is associated with an increase of ~0.42 in the vocabulary score, for non Native English-speakers, and this effect is statistically significant (p < 0.001).
+- Being a Native English-speaker is in this model associated with an increase of ~0.95 in vocabulary scores, but this effect is not statistically significant (p = 0.186), so we cannot confidently say that being a native English-speaker in itself makes a difference for vocabulary scores when education is considered.
 - The interaction between Education Level and Vocabulary score suggests that the effect of Education Level on Vocabulary score is slightly less for native-born individuals compared to non-native-born individuals, with an estimate of ~-0.03. However, this effect is not statistically significant (p = 0.663), meaning that the evidence that the relationship between Education Level and Vocabulary differs based on native-born status is not strong.
 
 To conclude, adding an interaction term does not seem to add significant predictive value for Vocabulary scores, as both the native-born effect and the interaction term are not statistically significant. This suggests that while Education Level positively impacts Vocabulary scores, this effect is consistent across Native and non-Native English-speakers.
@@ -138,7 +158,6 @@ m3 <- lm(vocab ~ educ * nativeBorn, data = dat1978)
 
 anova(m1, m2, m3)
 ```
-
 
 An ANOVA (analysis of variance) model comparison is conducted with model 1, predicting vocabulary solely from education level, and model 2, having nativeBorn as a predictor as well, and model 3 with an interaction between Education Level and Nativeness. 
 
